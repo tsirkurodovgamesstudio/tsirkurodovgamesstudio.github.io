@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ты сука ты не достоин второй половинки</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <!-- Приветственный экран -->
+    <div id="splash">
+      <h1>Tsirk Urodov Games Studio</h1>
+      <div class="muted">Представляет</div>
+      <button class="click-btn" onclick="showCharSelect()">
+        Найти вторую половинку и не только ❤️
+      </button>
+    </div>
+
+    <!-- Выбор персонажа -->
+    <div id="charSelect" class="hidden">
+      <h2><span class="duck-emoji" id="duckEmoji">🐣</span> Кто будет искать вторую половинку?</h2>
+      <div class="char-select-container">
+        <div class="char-grid" id="charGrid"></div>
+        <div class="char-info" id="charInfo">
+          <div class="char-info-image" id="charInfoImage"></div>
+          <div class="char-info-name" id="charInfoName">Наведи на персонажа</div>
+          <div class="char-info-desc" id="charInfoDesc">—</div>
+          <button class="char-select-btn hidden" id="charSelectBtn">Выбрать этого персонажа</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Игровой экран -->
+    <div id="game" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <div><strong>История</strong></div>
+          <div class="history" id="history">Начни игру</div>
+        </div>
+
+        <div class="card">
+          <div class="big-avatar">
+            <div class="avatar" id="bigAvatar"></div>
+            <div>
+              <div id="charName" style="font-weight:700">—</div>
+              <div class="muted" id="charDesc">—</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="stats">
+              <span>Прогресс: <b id="progressPercent">0%</b></span>
+            </div>
+            <div class="bar">
+              <i id="barFill"></i>
+            </div>
+          </div>
+
+          <button class="click-btn" id="clickBtn">Искать вторую половинку ❤️</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Попап для событий -->
+    <div class="popup" id="popup">
+      <div class="title" id="popupTitle"></div>
+      <div id="popupMsg"></div>
+      <button onclick="hidePopup()">ОК</button>
+    </div>
+  </div>
+
+  <!-- Аудио элемент -->
+  <audio id="bgMusic" loop></audio>
+
+  <!-- Скрипты -->
+  <script src="js/characters.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
