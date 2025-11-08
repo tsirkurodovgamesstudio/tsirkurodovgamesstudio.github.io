@@ -263,6 +263,28 @@ body {
   line-height: 1.6;
   transition: all 0.3s ease;
   margin-bottom: 20px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.char-info-desc::-webkit-scrollbar {
+  width: 8px;
+}
+.char-info-desc::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+}
+.char-info-desc::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.char-info-desc::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.5);
+}
+.char-info-desc {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 72, 153, 0.3) rgba(255, 255, 255, 0.07);
 }
 
 .char-select-btn {
@@ -333,8 +355,8 @@ body {
   }
   
   .char-info-desc {
-    font-size: 16px;
-    margin-bottom: 16px;
+    font-size: 14px;
+    margin-bottom: 14px;
   }
 }
 
@@ -380,12 +402,6 @@ body {
   gap: 20px;
 }
 
-@media (max-width: 768px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
   border-radius: 12px;
@@ -429,6 +445,15 @@ body {
   background: rgba(236, 72, 153, 0.6);
 }
 
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .history {
+    height: 300px;
+  }
+}
+
 /* Для Firefox */
 .history {
   scrollbar-width: thin;
@@ -469,8 +494,8 @@ body {
 }
 
 .big-avatar .avatar {
-  width: 140px;
-  height: 140px;
+  width: 200px;
+  height: 200px;
   background: rgba(236, 72, 153, 0.1);
   border: 2px solid rgba(236, 72, 153, 0.2);
   box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
@@ -478,6 +503,13 @@ body {
 
 .big-avatar .avatar img {
   border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .big-avatar .avatar {
+    width: 140px;
+    height: 140px;
+  }
 }
 
 .progress-wrap {
@@ -620,3 +652,39 @@ body {
   }
 }
 
+.char-game-desc {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 2px;
+  max-height: 170px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+.char-game-desc::-webkit-scrollbar {
+  width: 8px;
+}
+.char-game-desc::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+}
+.char-game-desc::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.char-game-desc::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.5);
+}
+.char-game-desc {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 72, 153, 0.3) rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 768px) {
+  .char-game-desc {
+    font-size: 14px;
+    line-height: 1.2;
+    max-height: 105px;
+  }
+}
