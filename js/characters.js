@@ -14,9 +14,7 @@ const CHARACTERS = [
     video: 'images/grishot.mp4',
     desc: DESCRIPTIONS.grishot,
     replicas: [
-      'Ну кто тут самый классный? Конечно я 😎',
-      'Прокачаю настроение',
-      'Ты уже влюбляешься?'
+      ' '
     ]
   },
   {
@@ -26,9 +24,7 @@ const CHARACTERS = [
     video: 'images/lilkreh.mp4',
     desc: DESCRIPTIONS.lilkreh,
     replicas: [
-      'Каждый клик — искусство',
-      'Ты вдохновляешь 💖',
-      'Порисуем вместе?'
+      ' '
     ]
   },
   {
@@ -38,9 +34,7 @@ const CHARACTERS = [
     video: 'images/perebloger.mp4',
     desc: DESCRIPTIONS.perebloger,
     replicas: [
-      '+10 к харизме',
-      'Это feature',
-      'Клик-клик — компилится ❤️'
+      ' '
     ]
   },
   {
@@ -50,9 +44,7 @@ const CHARACTERS = [
     video: 'images/showsmall.mp4',
     desc: DESCRIPTIONS.showsmall,
     replicas: [
-      'Влюбиться — не больно… иногда',
-      'Ты не бот?',
-      'Ну-ну, кликай'
+      ' '
     ]
   }
 ];
@@ -71,5 +63,47 @@ const HOVER_SOUNDS = {
   lilkreh: 'audio/lilkreh-hover.mp3',
   perebloger: 'audio/perebloger-hover.mp3',
   showsmall: 'audio/showsmall-hover.mp3'
+};
+
+// Реплики персонажей (пути к аудиофайлам)
+// Если файлы имеют другие имена, добавьте их сюда
+// Формат: audio/{characterId}/{filename}.mp3
+const REPLICAS = {
+  grishot: [
+    // Пример: 'audio/grishot/replica1.mp3',
+    // Добавьте здесь пути к вашим файлам реплик для Гришота
+  ],
+  lilkreh: [
+    // Пример: 'audio/lilkreh/replica1.mp3',
+    // Добавьте здесь пути к вашим файлам реплик для Лил Креша
+    'audio/lilkreh/1.MP3',
+    'audio/lilkreh/2.MP3',
+    'audio/lilkreh/3.MP3',
+    'audio/lilkreh/4.MP3',
+    'audio/lilkreh/5.MP3',
+    'audio/lilkreh/6.MP3',
+    'audio/lilkreh/7.MP3',
+    'audio/lilkreh/8.MP3',
+    'audio/lilkreh/9.MP3',
+    'audio/lilkreh/10.MP3',
+    'audio/lilkreh/11.MP3',
+    'audio/lilkreh/12.MP3',
+    'audio/lilkreh/13.MP3',
+    'audio/lilkreh/14.MP3',
+    'audio/lilkreh/15.MP3',
+    'audio/lilkreh/16.MP3',
+    'audio/lilkreh/17.MP3',
+    'audio/lilkreh/18.MP3',
+    'audio/lilkreh/19.MP3',
+    'audio/lilkreh/20.MP3'
+  ],
+  perebloger: [
+    // Пример: 'audio/perebloger/replica1.mp3',
+    // Добавьте здесь пути к вашим файлам реплик для Перебогера
+  ],
+  showsmall: [
+    // Пример: 'audio/showsmall/replica1.mp3',
+    // Добавьте здесь пути к вашим файлам реплик для Шоу Смол 2004
+  ]
 };
 

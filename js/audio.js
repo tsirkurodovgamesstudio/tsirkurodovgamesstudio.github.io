@@ -17,7 +17,7 @@ function playCharacterMusic(characterId) {
   const musicPath = MUSIC[characterId];
   if (musicPath) {
     bgMusic.src = musicPath;
-    bgMusic.volume = 0.3;
+    bgMusic.volume = 0.2;
     bgMusic.play().catch(() => {
       // Игнорируем ошибки автоплея (требуется взаимодействие пользователя)
     });

@@ -1,3 +1,6 @@
+// Значение увеличения шкалы за клик
+const BASE_PER_CLICK = 1.05;
+
 // Основная логика игры
 let gameState = {
   selectedCharacter: null,
@@ -7,8 +10,65 @@ let gameState = {
   lastRushActive: false // Перманентный дебаф при 90%
 };
 
-// Значение увеличения шкалы за клик
-const BASE_PER_CLICK = 0.05;
+// Система очереди реплик
+const replicaQueue = {
+  queue: [], // Очередь реплик для воспроизведения
+  isPlaying: false, // Флаг воспроизведения
+  currentAudio: null, // Текущее воспроизводимое аудио
+  
+  // Добавление реплики в очередь
+  add: function(audioPath) {
+    this.queue.push(audioPath);
+    if (!this.isPlaying) {
+      this.playNext();
+    }
+  },
+  
+  // Воспроизведение следующей реплики из очереди
+  playNext: function() {
+    if (this.queue.length === 0) {
+      this.isPlaying = false;
+      this.currentAudio = null;
+      return;
+    }
+    
+    this.isPlaying = true;
+    const audioPath = this.queue.shift();
+    const audio = new Audio(audioPath);
+    this.currentAudio = audio;
+    
+    audio.volume = 1;
+    
+    // Обработка окончания воспроизведения
+    audio.addEventListener('ended', () => {
+      this.currentAudio = null;
+      this.playNext(); // Воспроизводим следующую в очереди
+    });
+    
+    // Обработка ошибок
+    audio.addEventListener('error', () => {
+      console.warn(`Не удалось загрузить реплику: ${audioPath}`);
+      this.currentAudio = null;
+      this.playNext(); // Пропускаем и переходим к следующей
+    });
+    
+    audio.play().catch(() => {
+      // Игнорируем ошибки автоплея
+      this.currentAudio = null;
+      this.isPlaying = false;
+    });
+  },
+  
+  // Очистка очереди
+  clear: function() {
+    this.queue = [];
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+    }
+    this.isPlaying = false;
+  }
+};
 
 // DOM элементы
 const elements = {
@@ -34,6 +94,7 @@ function showSplash() {
   elements.charSelect.classList.add('hidden');
   elements.game.classList.add('hidden');
   stopMusic();
+  replicaQueue.clear(); // Очищаем очередь реплик
   gameState.progress = 0;
   gameState.selectedCharacter = null;
   gameState.activeBuffs = [];
@@ -362,6 +423,31 @@ function addHistoryEntry(text, type = '') {
   elements.history.scrollTop = elements.history.scrollHeight;
 }
 
+// Получение случайной реплики персонажа
+function getRandomReplica() {
+  if (!gameState.selectedCharacter) return null;
+  
+  const charId = gameState.selectedCharacter.id;
+  const replicaFolder = `audio/${charId}/`;
+  
+  // Сначала проверяем, есть ли реплики в конфигурации
+  if (REPLICAS[charId] && REPLICAS[charId].length > 0) {
+    const randomIndex = Math.floor(Math.random() * REPLICAS[charId].length);
+    return REPLICAS[charId][randomIndex];
+  }
+  
+  // Если в конфигурации нет реплик, пытаемся найти файлы с именами replica1.mp3, replica2.mp3 и т.д.
+  // Проверяем до 20 файлов
+  const availableReplicas = [];
+  for (let i = 1; i <= 20; i++) {
+    availableReplicas.push(`${replicaFolder}replica${i}.mp3`);
+  }
+  
+  // Возвращаем случайную реплику из списка
+  const randomIndex = Math.floor(Math.random() * availableReplicas.length);
+  return availableReplicas[randomIndex];
+}
+
 // Обработка клика
 function handleClick(event) {
   if (!gameState.selectedCharacter) return;
@@ -388,6 +474,14 @@ function handleClick(event) {
   
   // Проверка случайных событий (2% шанс: 1% баф, 1% дебаф)
   checkRandomEvents();
+  
+  // 2% шанс воспроизвести реплику персонажа
+  if (Math.random() < 0.02) {
+    const replicaPath = getRandomReplica();
+    if (replicaPath) {
+      replicaQueue.add(replicaPath);
+    }
+  }
   
   // Обновление активных баффов
   updateActiveBuffs();
@@ -478,11 +572,157 @@ function updateActiveBuffs() {
   updateClickMultiplier();
 }
 
-// Показ попапа победы
+// Анимация разлетающихся сердечек
+function spawnWinHearts() {
+  const heartsContainer = document.getElementById('heartsContainer');
+  if (!heartsContainer) return;
+  
+  const heartEmojis = ['💖', '💕', '💗', '💓', '💝', '💘', '❤️', '🧡', '💛', '💚', '💙', '💜'];
+  const numHearts = 50; // Количество сердечек
+  
+  for (let i = 0; i < numHearts; i++) {
+    setTimeout(() => {
+      const heart = document.createElement('div');
+      heart.className = 'win-heart';
+      heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+      
+      // Случайная позиция по экрану
+      const startX = Math.random() * window.innerWidth;
+      const startY = Math.random() * window.innerHeight;
+      
+      // Случайное направление разлета
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 200 + Math.random() * 300;
+      const endX = startX + Math.cos(angle) * distance;
+      const endY = startY + Math.sin(angle) * distance;
+      
+      // Случайный размер
+      const size = 20 + Math.random() * 30;
+      heart.style.fontSize = `${size}px`;
+      heart.style.left = `${startX}px`;
+      heart.style.top = `${startY}px`;
+      
+      heartsContainer.appendChild(heart);
+      
+      // Анимация разлета
+      requestAnimationFrame(() => {
+        heart.style.transition = 'all 2s ease-out';
+        heart.style.transform = `translate(${endX - startX}px, ${endY - startY}px) rotate(${Math.random() * 720}deg)`;
+        heart.style.opacity = '0';
+      });
+      
+      // Удаляем сердечко после анимации
+      setTimeout(() => {
+        if (heart.parentNode) {
+          heart.parentNode.removeChild(heart);
+        }
+      }, 2000);
+    }, i * 30); // Небольшая задержка между сердечками
+  }
+}
+
+// Показ экрана победы
 function showWin() {
-  elements.popupTitle.textContent = 'Победа!';
-  elements.popupMsg.textContent = 'Ты нашел свою вторую половинку 💘';
-  elements.popup.classList.add('show');
+  if (!gameState.selectedCharacter) return;
+  
+  // Останавливаем музыку и реплики
+  stopMusic();
+  replicaQueue.clear();
+  
+  // Скрываем игровой экран
+  elements.game.classList.add('hidden');
+  
+  // Показываем экран победы
+  const winScreen = document.getElementById('winScreen');
+  if (!winScreen) return;
+  
+  winScreen.classList.remove('hidden');
+  
+  // Воспроизводим аудио победы
+  const winAudio = new Audio('audio/won.mp3');
+  winAudio.volume = 1;
+  
+  // Запускаем анимацию сердечек
+  spawnWinHearts();
+  
+  // Воспроизводим аудио
+  winAudio.play().catch(() => {
+    // Игнорируем ошибки автоплея, продолжаем выполнение
+  });
+  
+  // После окончания аудио показываем видео концовки
+  winAudio.addEventListener('ended', () => {
+    showEndingVideo();
+  }, { once: true });
+  
+  // Если аудио не загрузилось или уже закончилось, сразу показываем видео
+  winAudio.addEventListener('canplaythrough', () => {
+    if (winAudio.ended || winAudio.currentTime >= winAudio.duration) {
+      showEndingVideo();
+    }
+  }, { once: true });
+  
+  // Таймаут на случай, если аудио не загрузится
+  setTimeout(() => {
+    if (!winAudio.ended) {
+      showEndingVideo();
+    }
+  }, 5000);
+}
+
+// Показ видео концовки
+function showEndingVideo() {
+  const endingVideo = document.getElementById('endingVideo');
+  const restartBtn = document.getElementById('restartBtn');
+  
+  if (!endingVideo || !gameState.selectedCharacter) return;
+  
+  // Определяем путь к видео концовки
+  const charId = gameState.selectedCharacter.id;
+  const endingPaths = {
+    grishot: 'images/grishotending.mp4',
+    lilkreh: 'images/lilkrehending.mp4',
+    perebloger: 'images/pereblogerending.mp4',
+    showsmall: 'images/showsmallending.mp4'
+  };
+  
+  const endingPath = endingPaths[charId] || endingPaths.grishot;
+  
+  endingVideo.src = endingPath;
+  endingVideo.style.display = 'block';
+  endingVideo.muted = false;
+  endingVideo.playsInline = true;
+  
+  // Воспроизводим видео
+  endingVideo.play().catch(() => {
+    // Если не удалось воспроизвести, сразу показываем кнопку
+    showRestartButton();
+  });
+  
+  // После окончания видео показываем кнопку
+  endingVideo.addEventListener('ended', () => {
+    showRestartButton();
+  }, { once: true });
+  
+  // Обработка ошибок загрузки видео
+  endingVideo.addEventListener('error', () => {
+    console.warn('Не удалось загрузить видео концовки');
+    showRestartButton();
+  }, { once: true });
+}
+
+// Показ кнопки перезагрузки
+function showRestartButton() {
+  const restartBtn = document.getElementById('restartBtn');
+  if (restartBtn && restartBtn.classList.contains('hidden')) {
+    restartBtn.classList.remove('hidden');
+    // Удаляем старый обработчик, если есть, и добавляем новый
+    const newRestartBtn = restartBtn.cloneNode(true);
+    restartBtn.parentNode.replaceChild(newRestartBtn, restartBtn);
+    newRestartBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  }
 }
 
 // Скрытие попапа

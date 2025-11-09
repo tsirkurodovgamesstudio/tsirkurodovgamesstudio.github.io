@@ -597,6 +597,97 @@ body {
   transform: translateY(0);
 }
 
+/* Экран победы */
+#winScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  background: #071026;
+  overflow: hidden;
+}
+
+#winScreen.hidden {
+  display: none;
+}
+
+#heartsContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.win-heart {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1002;
+}
+
+.ending-video {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1003;
+  display: none;
+  background: #071026;
+  object-fit: contain;
+  /* На мобильных устройствах - по ширине (квадрат по ширине экрана) */
+  width: 100vw;
+  height: 100vw;
+  max-width: 100vh;
+  max-height: 100vh;
+}
+
+/* На десктопе - по высоте (квадрат по высоте экрана) */
+@media (min-width: 769px) {
+  .ending-video {
+    width: 100vh;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vw;
+  }
+}
+
+.restart-btn {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 20px 50px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ff80bf, #ff4d94);
+  color: #021224;
+  border: none;
+  font-weight: 700;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 30px rgba(236, 72, 153, 0.5);
+  z-index: 1004;
+  animation: slideUp 0.5s ease-out;
+}
+
+.restart-btn:hover {
+  transform: translateX(-50%) translateY(-5px);
+  box-shadow: 0 12px 40px rgba(236, 72, 153, 0.6);
+}
+
+.restart-btn:active {
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.restart-btn.hidden {
+  display: none;
+}
+
 /* Popup */
 .popup {
   position: fixed;
