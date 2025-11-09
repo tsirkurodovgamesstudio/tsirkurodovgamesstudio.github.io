@@ -7,6 +7,9 @@ let gameState = {
   lastRushActive: false // Перманентный дебаф при 90%
 };
 
+// Значение увеличения шкалы за клик
+const BASE_PER_CLICK = 0.05;
+
 // DOM элементы
 const elements = {
   splash: document.getElementById('splash'),
@@ -85,110 +88,23 @@ function initCharacter() {
 // Рендер персонажей для выбора (плитка 2x2)
 function renderCharacters() {
   const charGrid = document.getElementById('charGrid');
-  const charInfoName = document.getElementById('charInfoName');
-  const charInfoDesc = document.getElementById('charInfoDesc');
-  const charInfoImage = document.getElementById('charInfoImage');
-  const charSelectBtn = document.getElementById('charSelectBtn');
+  const charConfirmBtn = document.getElementById('charConfirmBtn');
   
   // Определяем, мобильное ли устройство
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
   
-  // Обновляем текст для мобильных
-  if (isMobile) {
-    charInfoName.textContent = 'Тапни на персонажа';
-  }
-  
   let selectedSegment = null;
-  let currentHoverAudio = null; // Текущий воспроизводимый звук
+  let selectedCharacter = null;
+  let currentVideo = null;
   
-  // Функция показа персонажа
-  function showCharacter(char, segment) {
-    // Останавливаем предыдущий звук, если он играет
-    if (currentHoverAudio) {
-      currentHoverAudio.pause();
-      currentHoverAudio.currentTime = 0;
-      currentHoverAudio = null;
-    }
-    
-    // Воспроизводим звук при наведении
-    const hoverSound = HOVER_SOUNDS[char.id];
-    if (hoverSound) {
-      const audio = new Audio(hoverSound);
-      audio.volume = 1;
-      currentHoverAudio = audio;
-      audio.play().catch(() => {
-        // Игнорируем ошибки автоплея
-        currentHoverAudio = null;
-      });
-      
-      // Очищаем ссылку после окончания воспроизведения
-      audio.addEventListener('ended', () => {
-        if (currentHoverAudio === audio) {
-          currentHoverAudio = null;
-        }
-      });
-    }
-    
-    // Показываем изображение в блоке информации
-    charInfoImage.innerHTML = `<img src="${char.image}" alt="${char.name}" />`;
-    charInfoImage.classList.add('show');
-    
-    // Делаем контур в сегменте
-    if (selectedSegment && selectedSegment !== segment) {
-      selectedSegment.classList.remove('hovered', 'selected');
-    }
-    segment.classList.add('hovered');
-    selectedSegment = segment;
-    
-    // Обновляем текст
-    charInfoName.textContent = char.name;
-    charInfoDesc.textContent = char.desc;
-    charInfoName.style.transform = 'scale(1.05)';
-    setTimeout(() => {
-      charInfoName.style.transform = 'scale(1)';
-    }, 200);
-    
-    // На мобильных показываем кнопку выбора
-    if (isMobile) {
-      charSelectBtn.classList.remove('hidden');
-      charSelectBtn.onclick = () => {
-        gameState.selectedCharacter = char;
-        startGame();
-      };
-    }
-  }
-  
-  // Функция скрытия персонажа
-  function hideCharacter() {
-    // Останавливаем звук при уходе мыши (только на десктопе)
-    if (currentHoverAudio && !isMobile) {
-      currentHoverAudio.pause();
-      currentHoverAudio.currentTime = 0;
-      currentHoverAudio = null;
-    }
-    
-    // Убираем контур
-    if (selectedSegment) {
-      selectedSegment.classList.remove('hovered');
-      if (!isMobile) {
-        selectedSegment.classList.remove('selected');
+  // Функция остановки всех видео кроме указанного
+  function stopAllVideos(exceptVideo = null) {
+    document.querySelectorAll('.char-segment video').forEach(v => {
+      if (v !== exceptVideo) {
+        v.pause();
+        v.currentTime = 0;
       }
-    }
-    
-    // Скрываем изображение в блоке информации
-    charInfoImage.classList.remove('show');
-    setTimeout(() => {
-      if (!charInfoImage.classList.contains('show')) {
-        charInfoImage.innerHTML = '';
-      }
-    }, 400);
-    
-    // Сбрасываем текст
-    if (!isMobile || !selectedSegment) {
-      charInfoName.textContent = 'Наведи на персонажа';
-      charInfoDesc.textContent = '—';
-      charSelectBtn.classList.add('hidden');
-    }
+    });
   }
   
   charGrid.innerHTML = '';
@@ -196,53 +112,207 @@ function renderCharacters() {
   CHARACTERS.forEach((char, index) => {
     const segment = document.createElement('div');
     segment.className = 'char-segment';
-    segment.innerHTML = `<img src="${char.image}" alt="${char.name}" />`;
+    segment.dataset.charId = char.id;
+    
+    // Добавляем фото и видео
+    const img = document.createElement('img');
+    img.src = char.image;
+    img.alt = char.name;
+    
+    const video = document.createElement('video');
+    if (char.video) {
+      video.src = char.video;
+      video.loop = true;
+      video.muted = false;
+      video.playsInline = true;
+    }
+    
+    segment.appendChild(img);
+    if (char.video) {
+      segment.appendChild(video);
+    }
     
     // Обработка наведения (только для десктопа)
     if (!isMobile) {
       segment.addEventListener('mouseenter', () => {
-        showCharacter(char, segment);
+        // Если уже выбран другой персонаж, игнорируем наведение
+        if (selectedSegment && selectedSegment !== segment) {
+          return;
+        }
+        
+        segment.classList.add('hovered');
+        
+        // Останавливаем все другие видео
+        stopAllVideos(video);
+        
+        // Воспроизводим видео со звуком
+        if (video && char.video) {
+          video.currentTime = 0;
+          video.play().catch(() => {
+            // Игнорируем ошибки автоплея
+          });
+          currentVideo = video;
+        }
+      });
+      
+      // Эффект наклона при движении мыши
+      segment.addEventListener('mousemove', (e) => {
+        // Применяем только к выбранному или наведенному персонажу
+        if (!segment.classList.contains('hovered') && !segment.classList.contains('selected')) {
+          return;
+        }
+        
+        const rect = segment.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        const mouseX = e.clientX - centerX;
+        const mouseY = e.clientY - centerY;
+        
+        // Вычисляем углы наклона (максимум 15 градусов)
+        const maxTilt = 25;
+        const rotateX = (mouseY / (rect.height / 2)) * -maxTilt;
+        const rotateY = (mouseX / (rect.width / 2)) * maxTilt;
+        
+        // Применяем transform с scale и rotate
+        segment.style.transform = `scale(1.5) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       });
       
       segment.addEventListener('mouseleave', () => {
-        hideCharacter();
+        // Сбрасываем наклон
+        if (segment.classList.contains('hovered') || segment.classList.contains('selected')) {
+          segment.style.transform = 'scale(1.5) rotateX(0deg) rotateY(0deg)';
+        }
+        
+        // Если не выбран, убираем hover
+        if (!segment.classList.contains('selected')) {
+          segment.classList.remove('hovered');
+          segment.style.transform = '';
+          
+          // Останавливаем видео
+          if (video) {
+            video.pause();
+            video.currentTime = 0;
+          }
+          currentVideo = null;
+        }
       });
     }
     
     // Обработка клика/тапа
-    segment.addEventListener('click', (e) => {
-      if (isMobile) {
-        // На мобильных: первый тап показывает персонажа, второй тап запускает игру
-        if (selectedSegment === segment && segment.classList.contains('selected')) {
-          // Второй тап - запускаем игру
-          gameState.selectedCharacter = char;
-          startGame();
-        } else {
-          // Первый тап - показываем персонажа (звук уже в showCharacter)
-          showCharacter(char, segment);
-          segment.classList.add('selected');
-        }
-      } else {
-        // На десктопе: клик сразу запускает игру
-        gameState.selectedCharacter = char;
-        startGame();
+    segment.addEventListener('click', () => {
+      // Если уже выбран этот же персонаж, ничего не делаем
+      if (selectedSegment === segment) {
+        return;
       }
+      
+      // Убираем выбор с предыдущего персонажа
+      if (selectedSegment) {
+        selectedSegment.classList.remove('selected', 'hovered');
+        selectedSegment.style.transform = '';
+        const prevVideo = selectedSegment.querySelector('video');
+        if (prevVideo) {
+          prevVideo.pause();
+          prevVideo.currentTime = 0;
+        }
+      }
+      
+      // Останавливаем все видео
+      stopAllVideos();
+      
+      // Выбираем нового персонажа
+      selectedSegment = segment;
+      selectedCharacter = char;
+      segment.classList.add('selected');
+      
+      // Сбрасываем наклон при выборе
+      segment.style.transform = 'scale(1.5) rotateX(0deg) rotateY(0deg)';
+      
+      // На мобильных также добавляем hover для визуального эффекта
+      if (isMobile) {
+        segment.classList.add('hovered');
+      }
+      
+      // Воспроизводим видео
+      if (video && char.video) {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+        currentVideo = video;
+      }
+      
+      // Показываем кнопку подтверждения
+      charConfirmBtn.classList.remove('hidden');
     });
     
     charGrid.appendChild(segment);
   });
   
-  // Сброс информации при уходе мыши с сетки (только для десктопа)
+  // Сброс hover при уходе мыши с сетки (только для десктопа)
   if (!isMobile) {
     charGrid.addEventListener('mouseleave', () => {
-      // Убираем все контуры
+      // Убираем hover со всех сегментов, кроме выбранного
       document.querySelectorAll('.char-segment.hovered').forEach(seg => {
-        seg.classList.remove('hovered');
+        if (!seg.classList.contains('selected')) {
+          seg.classList.remove('hovered');
+          seg.style.transform = '';
+          const v = seg.querySelector('video');
+          if (v) {
+            v.pause();
+            v.currentTime = 0;
+          }
+        }
       });
-      selectedSegment = null;
       
-      // Скрываем изображение
-      hideCharacter();
+      // Сбрасываем наклон у выбранного элемента, если мышь ушла с сетки
+      if (selectedSegment) {
+        selectedSegment.style.transform = 'scale(1.5) rotateX(0deg) rotateY(0deg)';
+      }
+      
+      if (!selectedSegment) {
+        currentVideo = null;
+      }
+    });
+  }
+  
+  // Обработка кнопки подтверждения
+  charConfirmBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Предотвращаем всплытие события
+    if (selectedCharacter) {
+      gameState.selectedCharacter = selectedCharacter;
+      startGame();
+    }
+  });
+  
+  // Функция сброса выбора
+  function resetSelection() {
+    if (selectedSegment) {
+      selectedSegment.classList.remove('selected', 'hovered');
+      selectedSegment.style.transform = '';
+      const video = selectedSegment.querySelector('video');
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
+      selectedSegment = null;
+      selectedCharacter = null;
+      currentVideo = null;
+      charConfirmBtn.classList.add('hidden');
+      stopAllVideos();
+    }
+  }
+  
+  // Обработка клика вне плитки и кнопки для сброса выбора
+  const charSelectContainer = document.querySelector('.char-select-container');
+  if (charSelectContainer) {
+    document.addEventListener('click', (e) => {
+      // Проверяем, что клик был вне плитки и кнопки
+      const clickedOnGrid = charGrid.contains(e.target);
+      const clickedOnButton = charConfirmBtn.contains(e.target);
+      
+      // Если клик был вне плитки и кнопки, и персонаж выбран - сбрасываем выбор
+      if (!clickedOnGrid && !clickedOnButton && selectedSegment) {
+        resetSelection();
+      }
     });
   }
 }
@@ -328,7 +398,7 @@ function checkRandomEvents() {
   const rand = Math.random();
   // Если "последний рывок" — только дебаффы, подбираем отдельно
   if (gameState.lastRushActive) {
-    if (rand < 0.005) {
+    if (rand < 0.01) {
       // 0.5% на дебафф
       // 30% - мультипликатор, 70% - прогресс
       const which = Math.random();
@@ -342,7 +412,7 @@ function checkRandomEvents() {
     }
   } else {
     // 0.5% на бафф
-    if (rand < 0.005) {
+    if (rand < 0.01) {
       const which = Math.random();
       let bf;
       if (which < 0.3 && BUFFS_MULT.length > 0) {
@@ -352,7 +422,7 @@ function checkRandomEvents() {
       }
       applyBuffDebuff(bf, 'buff');
     // 0.5% на дебафф
-    } else if (rand < 0.01) {
+    } else if (rand < 0.02) {
       const which = Math.random();
       let def;
       if (which < 0.3 && DEBUFFS_MULT.length > 0) {
@@ -377,7 +447,7 @@ function applyBuffDebuff(effect, type) {
     };
     gameState.activeBuffs.push(buff);
     updateClickMultiplier();
-    addHistoryEntry(`${effect.name} (x${effect.value} на ${effect.duration/1000}с)`, type);
+    addHistoryEntry(`${effect.name} (x${effect.value} клики на ${effect.duration/1000}с)`, type);
     
     // Удаляем через duration
     setTimeout(() => {

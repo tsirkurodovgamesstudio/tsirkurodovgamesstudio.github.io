@@ -98,10 +98,10 @@ body {
 
 .char-select-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 60px;
-  flex-wrap: wrap;
+  gap: 30px;
 }
 
 /* Сетка с персонажами 2x2 */
@@ -112,6 +112,7 @@ body {
   gap: 12px;
   width: 500px;
   height: 500px;
+  perspective: 1000px;
 }
 
 .char-segment {
@@ -121,86 +122,107 @@ body {
   border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s ease,
+              filter 0.4s ease,
+              transform 0.1s ease-out;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  z-index: 1;
 }
 
-.char-segment::before {
-  content: '';
+/* Затемнение остальных при наведении/выборе */
+.char-grid:has(.char-segment.hovered) .char-segment:not(.hovered) {
+  opacity: 0.4;
+  filter: brightness(0.5);
+}
+
+.char-grid:has(.char-segment.selected) .char-segment:not(.selected) {
+  opacity: 0.4;
+  filter: brightness(0.5);
+}
+
+/* Увеличение выбранного персонажа */
+.char-segment.hovered,
+.char-segment.selected {
+  transform: scale(1.8);
+  z-index: 10;
+  border-color: rgba(236, 72, 153, 0.6);
+  box-shadow: 0 8px 100px rgba(236, 72, 153, 0.5);
+  transition: opacity 0.4s ease,
+              filter 0.4s ease,
+              transform 0.1s ease-out,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.char-segment img,
+.char-segment video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(236, 72, 153, 0);
-  transition: background 0.3s ease;
-  z-index: 2;
-  pointer-events: none;
-  border-radius: 12px;
 }
 
-.char-segment:hover::before {
-  background: rgba(236, 72, 153, 0.1);
-  box-shadow: inset 0 0 20px rgba(236, 72, 153, 0.2);
+.char-segment img {
+  transition: opacity 0.3s ease;
 }
 
-.char-segment:hover:not(.hovered) {
-  transform: scale(1.05);
-  z-index: 10;
-  border-color: rgba(236, 72, 153, 0.3);
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
-}
-
-.char-segment:hover:not(.hovered) img {
-  transform: scale(1.08);
-  filter: brightness(1.15) contrast(1.05);
-}
-
-.char-segment.hovered,
-.char-segment.selected {
-  transform: scale(1);
-  border-color: rgba(236, 72, 153, 0.3);
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
+.char-segment video {
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .char-segment.hovered img,
 .char-segment.selected img {
-  filter: brightness(0) opacity(0.3);
-  transform: scale(1);
+  opacity: 0;
 }
 
-.char-segment.hovered::after,
-.char-segment.selected::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 2px solid rgba(236, 72, 153, 0.4);
+.char-segment.hovered video,
+.char-segment.selected video {
+  opacity: 1;
+}
+
+/* Кнопка подтверждения */
+.char-confirm-btn {
+  padding: 16px 40px;
   border-radius: 12px;
-  z-index: 3;
-  pointer-events: none;
-  animation: pulseOutline 2s ease-in-out infinite;
+  background: linear-gradient(180deg, #ff80bf, #ff4d94);
+  color: #021224;
+  border: none;
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+  animation: slideUp 0.4s ease-out;
 }
 
-@keyframes pulseOutline {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.01);
-  }
+.char-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
 }
 
-.char-segment img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  display: block;
+.char-confirm-btn:active {
+  transform: translateY(0);
+}
+
+.char-confirm-btn.hidden {
+  display: none;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Информация о персонаже */
@@ -265,6 +287,8 @@ body {
   margin-bottom: 20px;
   max-height: 140px;
   overflow-y: auto;
+  padding-right: 10px;
+  text-align: justify;
 }
 
 .char-info-desc::-webkit-scrollbar {
