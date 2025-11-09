@@ -1,5 +1,5 @@
 // Значение увеличения шкалы за клик
-const BASE_PER_CLICK = 1.05;
+const BASE_PER_CLICK = 0.05;
 
 // Основная логика игры
 let gameState = {
