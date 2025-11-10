@@ -37,7 +37,7 @@ const replicaQueue = {
     const audio = new Audio(audioPath);
     this.currentAudio = audio;
     
-    audio.volume = 1.1;
+    audio.volume = 1;
     
     // Обработка окончания воспроизведения
     audio.addEventListener('ended', () => {
@@ -454,7 +454,7 @@ function handleClick(event) {
   
   // Воспроизводим звук клика
   const tapSound = new Audio('audio/tap.mp3');
-  tapSound.volume = 0.12;
+  tapSound.volume = 0.10;
   tapSound.play().catch(() => {
     // Игнорируем ошибки автоплея
   });
